@@ -1,5 +1,7 @@
 package br.com.bytebank.domain.account.services;
 
+import java.util.ArrayList;
+
 import br.com.bytebank.domain.account.daos.AccountDAO;
 import br.com.bytebank.domain.account.models.Account;
 
@@ -22,5 +24,21 @@ public class AccountService {
 		return true;
 		
 	}
+	
+	public ArrayList<Account> getAll(){
+		
+		return accountDAO.getAll();
+		
+	}
+	
+	public Account getAccount(String idParam, String accountParam) {
+	
+		if(idParam != null) {
+			return this.accountDAO.getById(Integer.parseInt(idParam));
+		}
+		
+		return this.accountDAO.getByNumber(Integer.parseInt(accountParam));
+	}
+	
 	
 }

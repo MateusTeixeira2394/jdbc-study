@@ -26,9 +26,9 @@ replay_pid*
 
 #Eclipse configurations
 .project
-/target
+target/
 .classpath
-/Servers
-/.settings
+Servers/
+.settings/
 
-/build
+build/

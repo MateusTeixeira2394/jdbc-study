@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Account {
 
+	private int id;
 	private int account;
 	private BigDecimal balance;
 	private String name;
@@ -32,6 +33,25 @@ public class Account {
 		this.setEmail(email);
 		this.name = name;
 		this.agency = agency;
+	}
+	
+	public Account(int id, int account, BigDecimal balance, String email, String cpf, int agency, String name) {
+		super();
+		this.setId(id);
+		this.account = account;
+		this.setBalance(balance);
+		this.cpf = cpf;
+		this.setEmail(email);
+		this.name = name;
+		this.agency = agency;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	@JsonCreator
