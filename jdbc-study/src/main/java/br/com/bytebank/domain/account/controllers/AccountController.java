@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.bytebank.domain.account.dtos.AccountResponseDTO;
 import br.com.bytebank.domain.account.models.Account;
 import br.com.bytebank.domain.account.services.AccountService;
+import br.com.bytebank.domain.account.utils.AccountHttpUtil;
 
 /**
  * Servlet implementation class CreateAccountController
@@ -26,6 +27,8 @@ public class AccountController extends HttpServlet {
 
 	private AccountService accountService;
 
+	private AccountHttpUtil accountHttpUtil;
+	
 	/**
 	 * @see HttpServlet#HttpServlet()
 	 */
@@ -33,51 +36,39 @@ public class AccountController extends HttpServlet {
 		super();
 		// TODO Auto-generated constructor stub
 		accountService = new AccountService();
+		accountHttpUtil = AccountHttpUtil.getIntance();
 	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-
-		PrintWriter out = resp.getWriter();
-
-		String json = "";
-
-		ObjectMapper objectMapper = new ObjectMapper();
+		
+		resp.setContentType("application/json");
 
 		String accountParam = req.getParameter("account");
 
 		String idParam = req.getParameter("id");
 
 		if (accountParam == null && idParam == null) {
-
-			json = objectMapper.writeValueAsString(new AccountResponseDTO("Missing account or id query param"));
-
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
-			out.print(json);
-
-			out.flush();
+			
+			accountHttpUtil.dispatchErrorResponse(resp, "Missing account or id query parameters");
+			
+			return;
 		}
 
 		Account account = this.accountService.getAccount(idParam, accountParam);
 
 		if (account == null) {
+			
+			accountHttpUtil.dispatchErrorResponse(resp, "Account not found");
+			
+			return;
 
-			json = objectMapper.writeValueAsString(new AccountResponseDTO("Account not found"));
+		} 
+		
+		accountHttpUtil.<Account>dispatchSuccessResponse(resp, account);
 
-			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
-		} else {
-
-			json = objectMapper.writeValueAsString(account);
-
-		}
-
-		out.print(json);
-
-		out.flush();
-
+		
 	}
 
 	/**
@@ -88,36 +79,19 @@ public class AccountController extends HttpServlet {
 			throws ServletException, IOException {
 		// TODO Auto-generated method stub
 
-		String requestBody = request.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
+		response.setContentType("application/json");
 
-		ObjectMapper objectMapper = new ObjectMapper();
+		Account account = accountHttpUtil.<Account>getRequestBody(request, Account.class);
 
-		try {
+		boolean resp = accountService.create(account);
 
-			Account account = objectMapper.readValue(requestBody, Account.class);
-
-			boolean resp = accountService.create(account);
-
-			PrintWriter out = response.getWriter();
-
-			String json = objectMapper.writeValueAsString(new AccountResponseDTO("Product created successfully"));
-
-			if (resp == false) {
-
-				json = objectMapper.writeValueAsString(new AccountResponseDTO("Something went wrong"));
-
-				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
-			}
-
-			out.print(json);
-
-			out.flush();
-
-		} catch (JsonProcessingException e) {
-
-			e.printStackTrace();
+		if (resp == false) {
+			
+			accountHttpUtil.dispatchErrorResponse(response, "Something wen wrong");
+			return;
 		}
+
+		accountHttpUtil.<AccountResponseDTO>dispatchSuccessResponse(response, new AccountResponseDTO("Product created successfully"));
 
 	}
 

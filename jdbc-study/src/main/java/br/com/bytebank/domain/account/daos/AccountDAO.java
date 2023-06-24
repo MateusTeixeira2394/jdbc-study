@@ -148,6 +148,36 @@ public class AccountDAO {
 		
 	}
 	
+	public int updateBalance(Integer account, BigDecimal value) {
+		
+		String sql = "update Account SET balance=balance + ? where account = ?";
+		
+		int result = 0;
+		
+		Connection connection = cf.getConnection();
+		
+		try {
+			
+			PreparedStatement ps = connection.prepareStatement(sql);
+			
+			ps.setBigDecimal(1, value);
+			ps.setInt(2, account);
+			
+			result = ps.executeUpdate();
+			
+			ps.close();
+			cf.closeConnection();
+			
+		} catch (SQLException e) {
+			
+			throw new RuntimeException(e);
+			
+		}
+		
+		return result;
+		
+	}
+	
 	private ArrayList<Account> getAccountsFromResult(ResultSet result) {
 		
 		ArrayList<Account> accounts = new ArrayList<Account>();
@@ -176,5 +206,6 @@ public class AccountDAO {
 		return accounts;
 		
 	}
+	
 
 }
