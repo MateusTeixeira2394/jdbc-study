@@ -9,30 +9,28 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import br.com.bytebank.domain.account.dtos.AccountResponseDTO;
 import br.com.bytebank.domain.account.dtos.DepositBodyDTO;
+import br.com.bytebank.domain.account.dtos.WithdrawBodyDTO;
 import br.com.bytebank.domain.account.services.AccountService;
 import br.com.bytebank.domain.account.utils.AccountHttpUtil;
 
 /**
- * Servlet implementation class DepositController
+ * Servlet implementation class WithdrawController
  */
-@WebServlet("/account/deposit")
-public class DepositController extends HttpServlet {
+@WebServlet("/account/withdraw")
+public class WithdrawController extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
 	private AccountService accountService;
-	
+
 	private AccountHttpUtil accountHttpUtil;
 
 	/**
 	 * @see HttpServlet#HttpServlet()
 	 */
-	public DepositController() {
+	public WithdrawController() {
 		super();
 		// TODO Auto-generated constructor stub
 		accountService = new AccountService();
@@ -46,17 +44,16 @@ public class DepositController extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		
+
 		response.setContentType("application/json");
 
 		boolean updated = false;
-		
-		DepositBodyDTO body = accountHttpUtil.<DepositBodyDTO>getRequestBody(request, DepositBodyDTO.class);
+
+		DepositBodyDTO body = accountHttpUtil.<WithdrawBodyDTO>getRequestBody(request, WithdrawBodyDTO.class);
 
 		if (body.getAccount() == null || body.getValue() == null) {
 
-			accountHttpUtil.dispatchErrorResponse(response,
-					"Missing account or value attributes of request body");
+			accountHttpUtil.dispatchErrorResponse(response, "Missing account or value attributes of request body");
 			return;
 		}
 
@@ -66,15 +63,16 @@ public class DepositController extends HttpServlet {
 			return;
 		}
 
-		updated = this.accountService.deposit(body.getAccount(), body.getValue());
+		updated = this.accountService.withdraw(body.getAccount(), body.getValue());
 
 		if (!updated) {
-			accountHttpUtil.dispatchErrorResponse(response, "It wasn't possible to make the deposit");
+			accountHttpUtil.dispatchErrorResponse(response, "It wasn't possible to make the withdraw");
 			return;
 		}
 
 		accountHttpUtil.<AccountResponseDTO>dispatchSuccessResponse(response,
-				new AccountResponseDTO("Deposit done successfully"));
+				new AccountResponseDTO("Withdraw done successfully"));
+
 	}
 
 }

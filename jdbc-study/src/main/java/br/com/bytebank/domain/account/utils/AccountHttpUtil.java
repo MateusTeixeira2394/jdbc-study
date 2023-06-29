@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.bytebank.domain.account.dtos.AccountResponseDTO;
-import br.com.bytebank.domain.account.models.DepositBodyDTO;
+import br.com.bytebank.domain.account.dtos.DepositBodyDTO;
 
 public class AccountHttpUtil {
 
@@ -41,7 +41,7 @@ public class AccountHttpUtil {
 			out = response.getWriter();
 
 			String json = objectMapper
-					.writeValueAsString(new AccountResponseDTO("Missing account or value attributes of body request"));
+					.writeValueAsString(new AccountResponseDTO(message));
 
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 

@@ -7,6 +7,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import javax.management.RuntimeErrorException;
+
 import br.com.bytebank.domain.account.models.Account;
 import br.com.bytebank.infra.db.ConnectionFactory;
 
@@ -178,6 +180,48 @@ public class AccountDAO {
 		
 	}
 	
+	public void transfer(Integer senderAccount, Integer receiverAccount, BigDecimal value) {
+		
+		Connection connection = cf.getConnection();
+		
+		try {
+			
+			connection.setAutoCommit(false);
+			
+			String senderSql = "update Account SET balance = balance - ? WHERE account = ?";
+			PreparedStatement senderStatement = connection.prepareStatement(senderSql);
+			senderStatement.setBigDecimal(1, value);
+			senderStatement.setInt(2, senderAccount);
+			senderStatement.executeUpdate();
+			
+			String receiverSql = "update Account SET balance = balance + ? WHERE account = ?";
+			PreparedStatement receiverStatement = connection.prepareStatement(receiverSql);
+			receiverStatement.setBigDecimal(1, value);
+			receiverStatement.setInt(2, receiverAccount);
+			receiverStatement.executeUpdate();
+			
+			connection.commit();
+			
+			senderStatement.close();
+			receiverStatement.close();
+			connection.close();
+			
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			
+			try {
+				connection.rollback();
+			} catch (SQLException ex) {
+				// TODO Auto-generated catch block
+				throw new RuntimeException(e.getMessage());
+			}
+			
+			throw new RuntimeException(e.getMessage());
+		}
+				
+	}
+	
 	private ArrayList<Account> getAccountsFromResult(ResultSet result) {
 		
 		ArrayList<Account> accounts = new ArrayList<Account>();
@@ -207,5 +251,5 @@ public class AccountDAO {
 		
 	}
 	
-
+	
 }

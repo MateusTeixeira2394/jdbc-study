@@ -1,6 +1,7 @@
 package br.com.bytebank.domain.account.services;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import br.com.bytebank.domain.account.daos.AccountDAO;
@@ -51,6 +52,16 @@ public class AccountService {
 
 		return this.accountDAO.updateBalance(account, balance.negate()) >= 1;
 
+	}
+	
+	public void transfer(Integer senderAccount, Integer receiverAccount, BigDecimal value) throws RuntimeException {
+		
+		if(value.compareTo(BigDecimal.ZERO) < 0) {
+			throw new RuntimeException("Value attribute can't be negative");
+		}
+		
+		this.accountDAO.transfer(senderAccount, receiverAccount, value);
+		
 	}
 
 }

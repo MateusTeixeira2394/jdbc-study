@@ -1,14 +1,17 @@
-package br.com.bytebank.domain.account.models;
+package br.com.bytebank.domain.account.dtos;
 
 import java.math.BigDecimal;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TransferBodyDTO {
 
 	private Integer receiver;
 	private Integer sender;
 	private BigDecimal value;
-	
-	public TransferBodyDTO(Integer receiver, Integer sender, BigDecimal value) {
+
+	public TransferBodyDTO(@JsonProperty("receiver") Integer receiver, @JsonProperty("sender") Integer sender,
+			@JsonProperty("value") BigDecimal value) {
 		super();
 		this.receiver = receiver;
 		this.sender = sender;
@@ -38,7 +41,5 @@ public class TransferBodyDTO {
 	public void setValue(BigDecimal value) {
 		this.value = value;
 	}
-	
-	
 
 }

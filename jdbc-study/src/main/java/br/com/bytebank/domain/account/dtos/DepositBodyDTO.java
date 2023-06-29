@@ -1,4 +1,4 @@
-package br.com.bytebank.domain.account.models;
+package br.com.bytebank.domain.account.dtos;
 
 import java.math.BigDecimal;
 
