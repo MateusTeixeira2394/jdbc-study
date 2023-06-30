@@ -15,15 +15,9 @@ public class AccountService {
 		accountDAO = new AccountDAO();
 	}
 
-	public boolean create(Account account) {
+	public void create(Account account) throws RuntimeException {
 
-		int resp = accountDAO.create(account);
-
-		if (resp == 0) {
-			return false;
-		}
-
-		return true;
+		accountDAO.create(account);
 
 	}
 
@@ -33,35 +27,69 @@ public class AccountService {
 
 	}
 
-	public Account getAccount(String idParam, String accountParam) {
+	public Account getAccount(String idParam, String accountParam) throws RuntimeException {
+
+		if (idParam == null && accountParam == null) {
+			throw new RuntimeException("Missing account or id query parameters");
+		}
 
 		if (idParam != null) {
 			return this.accountDAO.getById(Integer.parseInt(idParam));
 		}
 
-		return this.accountDAO.getByNumber(Integer.parseInt(accountParam));
+		Account account = this.accountDAO.getByNumber(Integer.parseInt(accountParam));
+
+		if (account == null) {
+			throw new RuntimeException("Account not found");
+		}
+
+		return account;
 	}
 
-	public boolean deposit(Integer account, BigDecimal balance) {
-
-		return this.accountDAO.updateBalance(account, balance) >= 1;
-
-	}
-
-	public boolean withdraw(Integer account, BigDecimal balance) {
-
-		return this.accountDAO.updateBalance(account, balance.negate()) >= 1;
-
-	}
-	
-	public void transfer(Integer senderAccount, Integer receiverAccount, BigDecimal value) throws RuntimeException {
+	public void deposit(Integer account, BigDecimal amount) throws RuntimeException {
 		
-		if(value.compareTo(BigDecimal.ZERO) < 0) {
-			throw new RuntimeException("Value attribute can't be negative");
+		if (account == null || amount == null) {
+
+			throw new RuntimeException("Missing account or value attributes of request body");
+			
+		}
+
+		if (amount.compareTo(BigDecimal.ZERO) < 0) {
+			
+			throw new RuntimeException("The value attribute can't be negative");
+	
 		}
 		
-		this.accountDAO.transfer(senderAccount, receiverAccount, value);
+		 this.accountDAO.updateBalance(account, amount);
+
+	}
+
+	public void withdraw(Integer account, BigDecimal amount) throws RuntimeException {
 		
+		if (account == null || amount == null) {
+
+			throw new RuntimeException("Missing account or value attributes of request body");
+			
+		}
+
+		if (amount.compareTo(BigDecimal.ZERO) < 0) {
+			
+			throw new RuntimeException("The value attribute can't be negative");
+	
+		}
+		
+		 this.accountDAO.updateBalance(account, amount.negate());
+
+	}
+
+	public void transfer(Integer senderAccount, Integer receiverAccount, BigDecimal value) throws RuntimeException {
+
+		if (value.compareTo(BigDecimal.ZERO) < 0) {
+			throw new RuntimeException("Value attribute can't be negative");
+		}
+
+		this.accountDAO.transfer(senderAccount, receiverAccount, value);
+
 	}
 
 }

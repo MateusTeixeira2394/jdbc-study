@@ -49,25 +49,17 @@ public class AccountController extends HttpServlet {
 
 		String idParam = req.getParameter("id");
 
-		if (accountParam == null && idParam == null) {
+		try {
 			
-			accountHttpUtil.dispatchErrorResponse(resp, "Missing account or id query parameters");
+			Account account = this.accountService.getAccount(idParam, accountParam);
 			
-			return;
+			accountHttpUtil.<Account>dispatchSuccessResponse(resp, account);
+			
+		} catch(RuntimeException e) {
+			
+			accountHttpUtil.dispatchErrorResponse(resp, e.getMessage());
+			
 		}
-
-		Account account = this.accountService.getAccount(idParam, accountParam);
-
-		if (account == null) {
-			
-			accountHttpUtil.dispatchErrorResponse(resp, "Account not found");
-			
-			return;
-
-		} 
-		
-		accountHttpUtil.<Account>dispatchSuccessResponse(resp, account);
-
 		
 	}
 
@@ -83,15 +75,18 @@ public class AccountController extends HttpServlet {
 
 		Account account = accountHttpUtil.<Account>getRequestBody(request, Account.class);
 
-		boolean resp = accountService.create(account);
+		try {
+		
+			accountService.create(account);
 
-		if (resp == false) {
+			accountHttpUtil.<AccountResponseDTO>dispatchSuccessResponse(response, new AccountResponseDTO("Product created successfully"));
 			
-			accountHttpUtil.dispatchErrorResponse(response, "Something wen wrong");
-			return;
+		} catch (RuntimeException e) {
+			
+			accountHttpUtil.dispatchErrorResponse(response, e.getMessage());
+			
 		}
-
-		accountHttpUtil.<AccountResponseDTO>dispatchSuccessResponse(response, new AccountResponseDTO("Product created successfully"));
+		
 
 	}
 

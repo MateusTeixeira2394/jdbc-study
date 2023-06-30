@@ -47,31 +47,20 @@ public class WithdrawController extends HttpServlet {
 
 		response.setContentType("application/json");
 
-		boolean updated = false;
+		DepositBodyDTO body = accountHttpUtil.<DepositBodyDTO>getRequestBody(request, DepositBodyDTO.class);
 
-		DepositBodyDTO body = accountHttpUtil.<WithdrawBodyDTO>getRequestBody(request, WithdrawBodyDTO.class);
+		try {
 
-		if (body.getAccount() == null || body.getValue() == null) {
+			this.accountService.withdraw(body.getAccount(), body.getValue());
 
-			accountHttpUtil.dispatchErrorResponse(response, "Missing account or value attributes of request body");
-			return;
+			accountHttpUtil.<AccountResponseDTO>dispatchSuccessResponse(response,
+					new AccountResponseDTO("Deposit done successfully"));
+
+		} catch (RuntimeException e) {
+
+			accountHttpUtil.dispatchErrorResponse(response, e.getMessage());
+
 		}
-
-		if (body.getValue().compareTo(BigDecimal.ZERO) < 0) {
-
-			accountHttpUtil.dispatchErrorResponse(response, "The value attribute can't be negative");
-			return;
-		}
-
-		updated = this.accountService.withdraw(body.getAccount(), body.getValue());
-
-		if (!updated) {
-			accountHttpUtil.dispatchErrorResponse(response, "It wasn't possible to make the withdraw");
-			return;
-		}
-
-		accountHttpUtil.<AccountResponseDTO>dispatchSuccessResponse(response,
-				new AccountResponseDTO("Withdraw done successfully"));
 
 	}
 

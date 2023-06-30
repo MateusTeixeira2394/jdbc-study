@@ -21,7 +21,7 @@ public class AccountDAO {
 		cf = new ConnectionFactory();
 	}
 
-	public int create(Account account) {
+	public void create(Account account) {
 
 		Connection connection = cf.getConnection();
 
@@ -38,13 +38,11 @@ public class AccountDAO {
 			statement.setString(5, account.getEmail());
 			statement.setInt(6, account.getAgency());
 
-			int result = statement.executeUpdate();
+			statement.executeUpdate();
 
 			statement.close();
 
 			cf.closeConnection();
-
-			return result;
 
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -114,9 +112,9 @@ public class AccountDAO {
 		}
 
 		return accounts.get(0);
-		
+
 	}
-	
+
 	public Account getById(int id) {
 
 		ArrayList<Account> accounts = new ArrayList<Account>();
@@ -147,87 +145,75 @@ public class AccountDAO {
 		}
 
 		return accounts.get(0);
-		
+
 	}
-	
-	public int updateBalance(Integer account, BigDecimal value) {
-		
+
+	public void updateBalance(Integer account, BigDecimal value) {
+
 		String sql = "update Account SET balance=balance + ? where account = ?";
-		
-		int result = 0;
-		
+
 		Connection connection = cf.getConnection();
-		
+
 		try {
-			
+
 			PreparedStatement ps = connection.prepareStatement(sql);
-			
+
 			ps.setBigDecimal(1, value);
 			ps.setInt(2, account);
-			
-			result = ps.executeUpdate();
+			int result = ps.executeUpdate();
 			
 			ps.close();
 			cf.closeConnection();
 			
+			if (result == 0) {
+				throw new RuntimeException("It wasn't possible to make this transaction");
+			}
+
 		} catch (SQLException e) {
-			
+
 			throw new RuntimeException(e);
-			
+
 		}
-		
-		return result;
-		
+
 	}
-	
-	public void transfer(Integer senderAccount, Integer receiverAccount, BigDecimal value) {
-		
+
+	public void transfer(Integer senderAccount, Integer receiverAccount, BigDecimal amount) {
+
 		Connection connection = cf.getConnection();
-		
+
 		try {
-			
+
 			connection.setAutoCommit(false);
 			
-			String senderSql = "update Account SET balance = balance - ? WHERE account = ?";
-			PreparedStatement senderStatement = connection.prepareStatement(senderSql);
-			senderStatement.setBigDecimal(1, value);
-			senderStatement.setInt(2, senderAccount);
-			senderStatement.executeUpdate();
-			
-			String receiverSql = "update Account SET balance = balance + ? WHERE account = ?";
-			PreparedStatement receiverStatement = connection.prepareStatement(receiverSql);
-			receiverStatement.setBigDecimal(1, value);
-			receiverStatement.setInt(2, receiverAccount);
-			receiverStatement.executeUpdate();
-			
+			decreaseBalance(connection, senderAccount, amount);
+
+			increaseBalance(connection, receiverAccount, amount);
+
 			connection.commit();
-			
-			senderStatement.close();
-			receiverStatement.close();
+
 			connection.close();
-			
-			
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			
+
 			try {
 				connection.rollback();
 			} catch (SQLException ex) {
 				// TODO Auto-generated catch block
-				throw new RuntimeException(e.getMessage());
+				throw new RuntimeException(ex.getMessage());
 			}
-			
+
 			throw new RuntimeException(e.getMessage());
 		}
-				
+
 	}
-	
+
 	private ArrayList<Account> getAccountsFromResult(ResultSet result) {
-		
+
 		ArrayList<Account> accounts = new ArrayList<Account>();
-		
+
 		try {
-			
+
 			while (result.next()) {
 
 				int id = result.getInt(1);
@@ -241,15 +227,49 @@ public class AccountDAO {
 				accounts.add(new Account(id, ac, balance, email, cpf, agency, name));
 
 			}
-			
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return accounts;
-		
+
 	}
-	
-	
+
+	private void decreaseBalance(Connection connection, Integer senderAccount, BigDecimal amount) throws SQLException {
+
+		String senderSql = "update Account SET balance = balance - ? WHERE account = ?";
+
+		try (PreparedStatement senderStatement = connection.prepareStatement(senderSql)) {
+			senderStatement.setBigDecimal(1, amount);
+			senderStatement.setInt(2, senderAccount);
+			int result = senderStatement.executeUpdate();
+			
+			if(result <= 0) {
+				throw new SQLException("Not found the sender account");
+			}
+		}
+
+	}
+
+	private void increaseBalance(Connection connection, Integer receiverAccount, BigDecimal amount)
+			throws SQLException {
+
+		String receiverSql = "update Account SET balance = balance + ? WHERE account = ?";
+
+		try (PreparedStatement receiverStatement = connection.prepareStatement(receiverSql)) {
+			
+			receiverStatement.setBigDecimal(1, amount);
+			receiverStatement.setInt(2, receiverAccount);
+			int result = receiverStatement.executeUpdate();
+			
+			if(result <= 0) {
+				throw new SQLException("Not found the receiver account");
+			}
+			
+		}
+
+	}
+
 }

@@ -26,7 +26,7 @@ public class DepositController extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	private AccountService accountService;
-	
+
 	private AccountHttpUtil accountHttpUtil;
 
 	/**
@@ -46,35 +46,24 @@ public class DepositController extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		
+
 		response.setContentType("application/json");
 
-		boolean updated = false;
-		
 		DepositBodyDTO body = accountHttpUtil.<DepositBodyDTO>getRequestBody(request, DepositBodyDTO.class);
 
-		if (body.getAccount() == null || body.getValue() == null) {
+		try {
 
-			accountHttpUtil.dispatchErrorResponse(response,
-					"Missing account or value attributes of request body");
-			return;
+			this.accountService.deposit(body.getAccount(), body.getValue());
+
+			accountHttpUtil.<AccountResponseDTO>dispatchSuccessResponse(response,
+					new AccountResponseDTO("Deposit done successfully"));
+
+		} catch (RuntimeException e) {
+
+			accountHttpUtil.dispatchErrorResponse(response, e.getMessage());
+
 		}
 
-		if (body.getValue().compareTo(BigDecimal.ZERO) < 0) {
-
-			accountHttpUtil.dispatchErrorResponse(response, "The value attribute can't be negative");
-			return;
-		}
-
-		updated = this.accountService.deposit(body.getAccount(), body.getValue());
-
-		if (!updated) {
-			accountHttpUtil.dispatchErrorResponse(response, "It wasn't possible to make the deposit");
-			return;
-		}
-
-		accountHttpUtil.<AccountResponseDTO>dispatchSuccessResponse(response,
-				new AccountResponseDTO("Deposit done successfully"));
 	}
 
 }
