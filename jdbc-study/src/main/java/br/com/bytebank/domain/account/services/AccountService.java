@@ -91,5 +91,15 @@ public class AccountService {
 		this.accountDAO.transfer(senderAccount, receiverAccount, value);
 
 	}
+	
+	public void deleteByNumber(String accountNumber) throws RuntimeException {
+		
+		if(accountNumber == null) {
+			throw new RuntimeException("The account attribute can't be empty");
+		}
+		
+		this.accountDAO.deleteByNumber(Integer.parseInt(accountNumber));
+		
+	}
 
 }

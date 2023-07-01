@@ -89,5 +89,27 @@ public class AccountController extends HttpServlet {
 		
 
 	}
+	
+	@Override
+	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		
+		resp.setContentType("application/json");
+		
+		String accountParam = req.getParameter("account"); 
+		
+		try {
+			
+			this.accountService.deleteByNumber(accountParam);
+			
+			this.accountHttpUtil.<AccountResponseDTO>dispatchSuccessResponse(resp, new AccountResponseDTO("Account deleted successfully"));
+			
+		} catch(RuntimeException e) {
+			
+			this.accountHttpUtil.dispatchErrorResponse(resp, e.getMessage());
+			
+		}
+		
+	}
 
 }

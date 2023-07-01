@@ -84,8 +84,6 @@ public class AccountDAO {
 
 	public Account getByNumber(int accountNumber) {
 
-		ArrayList<Account> accounts = new ArrayList<Account>();
-
 		String sql = "select id, account, balance, name, cpf, email, agency, created_at from Account where account = ?";
 
 		try {
@@ -98,7 +96,7 @@ public class AccountDAO {
 
 			ResultSet result = ps.executeQuery();
 
-			accounts = this.getAccountsFromResult(result);
+			Account account = this.getAccountsFromResult(result).get(0);
 
 			result.close();
 
@@ -106,18 +104,60 @@ public class AccountDAO {
 
 			cf.closeConnection();
 
+			if (account == null) {
+				throw new RuntimeException("Account not found");
+			}
+
+			return account;
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			throw new RuntimeException(e);
 		}
 
-		return accounts.get(0);
+	}
+
+	public void deleteByNumber(int accountNumber) throws RuntimeException {
+
+		Account account = this.getByNumber(accountNumber);
+		
+		int comparison = account.getBalance().compareTo(BigDecimal.ZERO);
+		
+		if (comparison < 0) {
+			throw new RuntimeException("It's not allowed delete an account with nagative balance");
+		}
+		
+		if (comparison > 0) {
+			throw new RuntimeException("It's not allowed delete an account with positive balance");
+		}
+		
+		deleteByNumberQuery(accountNumber);
+
+	}
+
+	private void deleteByNumberQuery(int accountNumber) {
+
+		String sql = "delete from Account where account = ?";
+
+		try {
+
+			Connection connection = cf.getConnection();
+
+			PreparedStatement ps = connection.prepareStatement(sql);
+
+			ps.setInt(1, accountNumber);
+			ps.executeUpdate();
+
+			ps.close();
+			connection.close();
+
+		} catch (SQLException e) {
+			throw new RuntimeException(e.getMessage());
+		}
 
 	}
 
 	public Account getById(int id) {
-
-		ArrayList<Account> accounts = new ArrayList<Account>();
 
 		String sql = "select id, account, balance, name, cpf, email, agency, created_at from Account where id = ?";
 
@@ -131,7 +171,7 @@ public class AccountDAO {
 
 			ResultSet result = ps.executeQuery();
 
-			accounts = this.getAccountsFromResult(result);
+			Account account = this.getAccountsFromResult(result).get(0);
 
 			result.close();
 
@@ -139,12 +179,16 @@ public class AccountDAO {
 
 			cf.closeConnection();
 
+			if (account == null) {
+				throw new RuntimeException("Account not found");
+			}
+
+			return account;
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			throw new RuntimeException(e);
 		}
-
-		return accounts.get(0);
 
 	}
 
@@ -161,10 +205,10 @@ public class AccountDAO {
 			ps.setBigDecimal(1, value);
 			ps.setInt(2, account);
 			int result = ps.executeUpdate();
-			
+
 			ps.close();
 			cf.closeConnection();
-			
+
 			if (result == 0) {
 				throw new RuntimeException("It wasn't possible to make this transaction");
 			}
@@ -184,7 +228,7 @@ public class AccountDAO {
 		try {
 
 			connection.setAutoCommit(false);
-			
+
 			decreaseBalance(connection, senderAccount, amount);
 
 			increaseBalance(connection, receiverAccount, amount);
@@ -245,8 +289,8 @@ public class AccountDAO {
 			senderStatement.setBigDecimal(1, amount);
 			senderStatement.setInt(2, senderAccount);
 			int result = senderStatement.executeUpdate();
-			
-			if(result <= 0) {
+
+			if (result <= 0) {
 				throw new SQLException("Not found the sender account");
 			}
 		}
@@ -259,15 +303,15 @@ public class AccountDAO {
 		String receiverSql = "update Account SET balance = balance + ? WHERE account = ?";
 
 		try (PreparedStatement receiverStatement = connection.prepareStatement(receiverSql)) {
-			
+
 			receiverStatement.setBigDecimal(1, amount);
 			receiverStatement.setInt(2, receiverAccount);
 			int result = receiverStatement.executeUpdate();
-			
-			if(result <= 0) {
+
+			if (result <= 0) {
 				throw new SQLException("Not found the receiver account");
 			}
-			
+
 		}
 
 	}
